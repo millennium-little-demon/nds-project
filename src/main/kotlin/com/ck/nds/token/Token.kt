@@ -17,7 +17,7 @@ internal data class Token(
 ) {
 
     constructor(value: String, lnc: LineNumberCharArray, tokenType: TokenType)
-            : this(value, lnc.lastCursor, lnc.lineNumber, tokenType)
+            : this(value, lnc.linePosition - value.length, lnc.lineNumber, tokenType)
 
 
 }

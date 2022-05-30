@@ -3,6 +3,7 @@ package com.ck.nds.lexer.matcher
 import com.ck.nds.lexer.LineNumberCharArray
 import com.ck.nds.lexer.Matcher
 import com.ck.nds.token.Token
+import com.ck.nds.token.TokenType
 
 /**
  *
@@ -11,12 +12,18 @@ import com.ck.nds.token.Token
  */
 internal object IdMatcher : Matcher {
 
-
     override fun match(charArray: LineNumberCharArray): Token? {
+        var ch = charArray.peek(0)
+        if (!(ch.isLetter() && ch.isLowerCase())) return null
 
-//        val ch = charArray.peek(0)
-     
+        var temp = 1
+        ch = charArray.peek(temp)
+        while (ch.isLetterOrDigit() || ch == '_' || ch == '$') {
+            temp += 1
+            ch = charArray.peek(temp)
+        }
 
-        return null
+        val readStr = charArray.read(temp)
+        return Token(readStr, charArray, TokenType.ID)
     }
 }

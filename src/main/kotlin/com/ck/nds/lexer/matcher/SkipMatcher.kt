@@ -3,6 +3,7 @@ package com.ck.nds.lexer.matcher
 import com.ck.nds.lexer.LineNumberCharArray
 import com.ck.nds.lexer.Matcher
 import com.ck.nds.token.Token
+import com.ck.nds.token.TokenType
 
 /**
  *
@@ -19,14 +20,15 @@ internal object SkipMatcher : Matcher {
             charArray.read(1)
         }
 
-        val ch = charArray.peek(0)
-        if (ch == '/' && charArray.peek(1) == '/') {
+        if (charArray.peek(0) == '/' && charArray.peek(1) == '/') {
             var temp = 2
             while (!charArray.match(temp, '\n')) {
                 temp += 1
             }
             charArray.read(temp + 1)
+            return Token("", charArray, TokenType.SKIP)
         }
+
         return null
     }
 }

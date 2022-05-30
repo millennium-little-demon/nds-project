@@ -1,15 +1,11 @@
 package com.ck.nds.parse
 
 import com.ck.nds.SyntaxException
-import com.ck.nds.ast.AstNode
-import com.ck.nds.ast.MetadataKeyVal
-import com.ck.nds.ast.Namespace
-import com.ck.nds.ast.Program
+import com.ck.nds.ast.*
 import com.ck.nds.lexer.Lexer
 import com.ck.nds.token.Token
 import com.ck.nds.token.TokenType
 import com.ck.nds.token.TokenType.*
-import java.util.EventListener
 
 /**
  *
@@ -103,7 +99,7 @@ internal class Parse(string: String) {
         }
 
         expectedMatch(R_BRACE)
-        return com.ck.nds.ast.Metadata(metadataExprList)
+        return Metadata(metadataExprList)
     }
 
     /**
@@ -123,11 +119,11 @@ internal class Parse(string: String) {
 
     private fun mapper(): AstNode {
         expectedMatch(MAPPER)
-//        expectedMatch()
+        val idStr = expectedMatch(ID)
+        expectedMatch(L_BRACE)
 
-
-
-        return Namespace("")
+        expectedMatch(R_BRACE)
+        return MethodMapper(idStr.value)
     }
 
     private fun mapperBlockStatement() {

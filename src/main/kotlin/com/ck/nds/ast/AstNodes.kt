@@ -29,3 +29,7 @@ internal class MetadataKeyVal(
         return super.getType()
     }
 }
+
+internal class MethodMapper(
+    val methodName: String,
+) : AstNode

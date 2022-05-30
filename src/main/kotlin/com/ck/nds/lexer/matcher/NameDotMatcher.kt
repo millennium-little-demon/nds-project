@@ -18,10 +18,13 @@ internal object NameDotMatcher : Matcher {
 
         var temp = 1
         ch = charArray.peek(temp)
+        var flag = false
         while (ch.isLetter() || ch == '.') {
+            if (ch == '.') flag = true
             temp += 1
             ch = charArray.peek(temp)
         }
+        if (!flag) return null
         if (!charArray.peek(temp - 1).isLetter()) return null
 
         val readStr = charArray.read(temp)

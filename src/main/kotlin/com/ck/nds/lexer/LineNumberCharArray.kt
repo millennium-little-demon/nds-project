@@ -12,8 +12,12 @@ internal class LineNumberCharArray(private val charArray: CharArray) {
     }
 
     private var cursor = 0
+    private var lastCursor = 0
+    private var isNewLine = false
+
+    var linePosition = 0
     var lineNumber = 1
-    var lastCursor = 0
+
 
     fun match(i: Int, ch: Char): Boolean {
         return when (peek(i)) {
@@ -26,7 +30,7 @@ internal class LineNumberCharArray(private val charArray: CharArray) {
     fun match(str: String): Boolean {
         if (str.isEmpty()) return false
 
-        return str.withIndex().all {(index, ch) ->  match(index, ch) }
+        return str.withIndex().all { (index, ch) -> match(index, ch) }
     }
 
     fun peek(i: Int): Char {
@@ -43,9 +47,21 @@ internal class LineNumberCharArray(private val charArray: CharArray) {
         lastCursor = cursor
         cursor = if (cursor + size < charArray.size) cursor + size else charArray.size
 
-        val copyOf = charArray.copyOfRange(lastCursor, cursor)
-        lineNumber += copyOf.count { it == '\n' }
-        return copyOf.concatToString()
+        val copyStr = charArray.copyOfRange(lastCursor, cursor).concatToString()
+        lineNumber += copyStr.count { it == '\n' }
+
+        if (isNewLine) {
+            linePosition = copyStr.length
+            isNewLine = false
+        } else {
+            linePosition += copyStr.length
+        }
+
+        val lastIndex = copyStr.lastIndexOf('\n')
+        if (lastIndex != -1) {
+            isNewLine = true
+        }
+        return copyStr
     }
 
 

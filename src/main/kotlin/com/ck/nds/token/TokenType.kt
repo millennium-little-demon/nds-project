@@ -13,16 +13,17 @@ internal enum class TokenType(val keyword: String) {
     MAPPER("#mapper"),
     IF("#if"),
     WHEN("#when"),
-    ID("id")
-    ,
+    ID("id"),
     
+    SKIP("skip"),
+
     NAME_DOT_LITERAL("name_dot_literal"),
     STRING_LITERAL("string_literal"),
     NUMERIC_LITERAL("numeric_literal"),
     PARAM_VARIABLE("param_variable"),
 
     METADATA_KEY("metadataKey"),
-    
+
     TRUE("true"),
     FALSE("false"),
     L_BRACE("{"),

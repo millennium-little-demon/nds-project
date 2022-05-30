@@ -2,11 +2,6 @@ package com.ck.nds.lexer
 
 import com.ck.nds.lexer.Matcher.Companion.simpleMatcher
 import com.ck.nds.lexer.matcher.*
-import com.ck.nds.lexer.matcher.MetadataKeyMatcher
-import com.ck.nds.lexer.matcher.NumericLiteral
-import com.ck.nds.lexer.matcher.ParamVariable
-import com.ck.nds.lexer.matcher.SkipMatcher
-import com.ck.nds.lexer.matcher.StringMatcher
 import com.ck.nds.token.Token
 import com.ck.nds.token.TokenType
 
@@ -28,7 +23,7 @@ internal class Lexer(string: String) {
             simpleMatcher(TokenType.IF),
             simpleMatcher(TokenType.WHEN),
             ParamVariable,
-            
+
             MetadataKeyMatcher,
             NameDotMatcher,
             StringMatcher,
@@ -67,20 +62,20 @@ internal class Lexer(string: String) {
 
     private fun String.stripWindowsNewlines() = this.replace("\r", "").toCharArray()
 
-    fun getNextToken(): Token? {
+    tailrec fun getNextToken(): Token? {
         var token: Token?
         for (matcher in matcherArray) {
             token = matcher.match(lineNumberCharArray)
-            if (token == null) {
+            return if (token == null) {
                 continue
+            } else if (token.tokenType == TokenType.SKIP) {
+                getNextToken()
             } else {
-                return token
+                token
             }
         }
-
         return null
     }
-
 
 }
 
