@@ -1,0 +1,73 @@
+#namespace com.ck.mapper.UserInfoMapper
+
+#metadata {
+    $queryTimeout: "xx"
+}
+
+#fragment sqlId {
+    select * from user_info
+}
+
+
+#mapper selectByUserName {
+    insert into xxx_tab(id, name)
+    
+    :id::queryById
+    
+    select * from user_info where id = ?
+
+    #fragment sqlId
+    where user_name = :userName?.notBlank
+    where user_name = :userName -> :queryType == 1  
+
+    
+    where user_name = :userName -> :queryType == 0 && :userName == "test"
+    
+    #if :queryType == 0 && :userName == "test" {
+        where user_name = :userName 
+    } else {
+        xxx
+    }
+    
+    #when {
+        :queryType == 0 && :userName == "test" -> {
+            xxx
+        }
+        :queryType == 0 && :userName == "test" -> {
+                    xxx
+        }
+        else -> {}
+    }
+    
+    select * from user_info
+    where id in #repeat ids
+    
+    insert into user_info(id, name, age, creation_time)
+    values #repeat userInfoList {
+        (:id, :name, :age::nullDefault(20), now()),
+    }
+    
+}
+
+#namespace
+#metadata
+#fragment
+#mapping
+#if else
+#when
+#repeat
+{}
+()
+->
+?.
+::
+:
+&&
+||
+>
+>=
+<
+<=
+==
+!=
+""

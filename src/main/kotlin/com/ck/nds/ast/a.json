@@ -1,0 +1,24 @@
+{
+  "type": "Program",
+  "value": [
+    {
+      "type": "Namespace",
+      "value": "com.ck.mapper.UserInfoMapper"
+    },
+    {
+      "type": "Metadata",
+      "value": [
+        {
+          "key": "queryTimeout",
+          "value": "xx"
+        },
+        {
+          "key": "update",
+          "value": "xxa"
+        }
+      ]
+    }
+  ]
+}
+
+

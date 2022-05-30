@@ -1,0 +1,15 @@
+#namespace com.ck.mapper.UserInfoMapper
+
+#metadata {
+    $queryTimeout: "xx"
+    $update: "xxa"
+}
+
+// #mapper selectUserInfoByName {
+// 
+//     :userName
+//     
+//     #if :userName != null {
+//         where user_name = :userName
+//     }
+// }
