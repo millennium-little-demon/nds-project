@@ -6,8 +6,9 @@
 // }
 
 #mapper selectUserInfoByName {
-// 
-//     :userName
+ 
+     where user_name = :userName?.isNotEmpty
+     
 //     
 //     #if :userName != null {
 //         where user_name = :userName

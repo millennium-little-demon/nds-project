@@ -5,10 +5,10 @@ package com.ck.nds.lexer
  * @author 陈坤
  * 2022/5/29 21:19
  */
-internal class LineNumberCharArray(private val charArray: CharArray) {
+class LineNumberCharArray(private val charArray: CharArray) {
 
     companion object {
-        private const val EMPTY = (-1).toChar()
+        const val EMPTY = (-1).toChar()
     }
 
     private var cursor = 0
@@ -20,11 +20,7 @@ internal class LineNumberCharArray(private val charArray: CharArray) {
 
 
     fun match(i: Int, ch: Char): Boolean {
-        return when (peek(i)) {
-            ch -> true
-            EMPTY -> false
-            else -> false
-        }
+        return peek(i) == ch
     }
 
     fun match(str: String): Boolean {
