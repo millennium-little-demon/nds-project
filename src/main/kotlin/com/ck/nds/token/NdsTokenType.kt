@@ -1,4 +1,4 @@
-package com.ck.nds.m2
+package com.ck.nds.token
 
 /**
  * 词法分析得到的token类型
@@ -59,7 +59,8 @@ enum class NdsKeywordType(val keyword: String) : NdsDerivedType {
     FRAGMENT("#fragment"),
     MAPPER("#mapper"),
     IF("#if"),
-    ELSE("else"),
+
+    //    ELSE("else"),
     WHEN("#when"),
     ;
 

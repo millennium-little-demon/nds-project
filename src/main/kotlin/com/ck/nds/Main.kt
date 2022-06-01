@@ -1,9 +1,8 @@
 package com.ck.nds
 
-import com.ck.nds.parse.Parse
+import com.ck.nds.parse.NdsParse
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
-import java.io.File
 
 /**
  *
@@ -13,23 +12,19 @@ import java.io.File
 
 class Main
 
+
 fun main() {
+    val text = Main::class.java.classLoader.getResource("t2.txt")?.readText()
+        ?: throw RuntimeException("文件不存在")
 
-    val om = ObjectMapper().apply {
-        setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    }
+    val om = ObjectMapper()
+    om.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+
+    val programAst = NdsParse(text).programAst()
+
+    om.writerWithDefaultPrettyPrinter()
+        .writeValueAsString(programAst)
+        .also { println(it) }
 
 
-    val code = Main::class.java.classLoader.getResource("T.txt")?.readText()?: throw RuntimeException("文件不存在")
-
-    val parse = Parse(code)
-
-    parse.program()
-//        .also { println(it) }
-        .also {
-            println(
-                om.writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(it)
-            )
-        }
 }

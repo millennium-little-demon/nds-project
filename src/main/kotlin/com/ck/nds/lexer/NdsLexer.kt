@@ -1,8 +1,10 @@
-package com.ck.nds.m2.lexer
+package com.ck.nds.lexer
 
-import com.ck.nds.lexer.LineNumberCharArray
-import com.ck.nds.m2.*
-import com.ck.nds.m2.lexer.matcher.NdsSkipCharMatcher
+import com.ck.nds.lexer.matcher.NdsSkipCharMatcher
+import com.ck.nds.lexer.matcher.NormalLiteralMatcher
+import com.ck.nds.lexer.matcher.ParamVariableMatcher
+import com.ck.nds.lexer.matcher.StringMatcher
+import com.ck.nds.token.*
 
 /**
  * 词法解析
@@ -43,13 +45,25 @@ class NdsLexer(private val lineNumberCharArray: LineNumberCharArray) {
                 SimpleLiteralMatcher(it.symbolText) { str, arr -> NdsSymbolToken(str, it, arr) }
             }
 
+            /**
+             * 其他token匹配器
+             */
+            val otherMatchers = listOf(
+                StringMatcher,
+                NormalLiteralMatcher
+            )
+
             matcherArray = listOf(
                 /**
                  * 忽略字符匹配器应第一个处理
                  */
-                listOf(NdsSkipCharMatcher),
+                listOf(
+                    NdsSkipCharMatcher,
+                    ParamVariableMatcher,
+                ),
                 keywordMatchers,
                 symbolMatchers,
+                otherMatchers
             ).flatten().toTypedArray()
         }
     }

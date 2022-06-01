@@ -1,0 +1,37 @@
+{
+  "type": "ProgramAst",
+  "body": [
+    {
+      "type": "NamespaceAst",
+      "namespace": "com.ck.mapper.UserInfoMapper"
+    },
+    {
+      "type": "MetadataInfoAst",
+      "metadataMap": {
+        "$queryTimeout": "10s",
+        "$queryTimeout2": "101s"
+      }
+    },
+    {
+      "type": "MappingAst",
+      "mappingName": "selectUserInfoByName",
+      "body": [
+        {
+          "type": "MetadataInfoAst",
+          "metadataMap": {
+            "$m1": "10s",
+            "$q2": "101s"
+          }
+        },
+        {
+          "type": "SqlAst",
+          "sql": "select * from user_info where user_name = "
+        },
+        {
+          "type": "ParamVariableAst",
+          "varName": ":userName"
+        }
+      ]
+    }
+  ]
+}

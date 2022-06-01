@@ -1,7 +1,6 @@
-package com.ck.nds.m2.lexer
+package com.ck.nds.lexer
 
-import com.ck.nds.lexer.LineNumberCharArray
-import com.ck.nds.m2.NdsToken
+import com.ck.nds.token.NdsToken
 
 /**
  * 简单字符匹配器

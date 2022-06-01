@@ -1,4 +1,4 @@
-package com.ck.nds.m2
+package com.ck.nds.token
 
 import com.ck.nds.lexer.LineNumberCharArray
 
@@ -52,6 +52,26 @@ data class NdsNormalLiteralToken(
 
     override val ndsTokenType: NdsTokenType = NdsTokenType.NORMAL_LITERAL
     override fun toString() = "NdsNormalLiteralToken(string='$string', ${super.lineToString()}, ndsTokenType=$ndsTokenType)"
+}
+
+data class NdsStringToken(
+    override val string: String,
+    private val lineNumberCharArray: LineNumberCharArray,
+) : NdsAbstractToken(lineNumberCharArray) {
+
+    override val ndsTokenType = NdsTokenType.STRING_LITERAL
+    override fun toString(): String {
+        return "StringToken(string='$string', ndsTokenType=$ndsTokenType)"
+    }
+
+}
+
+data class NdsParamVariableToken(
+    override val string: String,
+    private val lineNumberCharArray: LineNumberCharArray,
+) : NdsAbstractToken(lineNumberCharArray) {
+    override val ndsTokenType = NdsTokenType.PARAM_VARIABLE
+
 }
 
 /**

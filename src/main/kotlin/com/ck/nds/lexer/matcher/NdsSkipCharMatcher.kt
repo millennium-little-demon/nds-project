@@ -1,8 +1,8 @@
-package com.ck.nds.m2.lexer.matcher
+package com.ck.nds.lexer.matcher
 
 import com.ck.nds.lexer.LineNumberCharArray
-import com.ck.nds.m2.NdsToken
-import com.ck.nds.m2.lexer.NdsMatcher
+import com.ck.nds.lexer.NdsMatcher
+import com.ck.nds.token.NdsToken
 
 /**
  * 需要跳过的字符匹配器
@@ -12,22 +12,19 @@ import com.ck.nds.m2.lexer.NdsMatcher
  */
 object NdsSkipCharMatcher : NdsMatcher {
 
-    private val skipCharArr = charArrayOf(
-        ' ', '\n', '\t'
-    )
-
     override fun match(lineNumberCharArray: LineNumberCharArray): NdsToken? {
-        skipChar(lineNumberCharArray)
+        skipWhitespace(lineNumberCharArray)
         skipComments(lineNumberCharArray)
 
         return null
     }
 
     /**
-     * 跳过简单字符 [skipCharArr]
+     * 跳过空白字符
+     * ' ', '\n', '\t'
      */
-    private fun skipChar(lineNumberCharArray: LineNumberCharArray) {
-        while (lineNumberCharArray.peek(0) in skipCharArr)
+    private fun skipWhitespace(lineNumberCharArray: LineNumberCharArray) {
+        while (lineNumberCharArray.peek(0).isWhitespace())
             lineNumberCharArray.read(1)
     }
 
@@ -41,7 +38,7 @@ object NdsSkipCharMatcher : NdsMatcher {
             lineNumberCharArray.read(temp + 1)
 
             /**
-             * 注释信息之后可能还会存在 [skipCharArr] 字符
+             * 注释信息之后可能还会存在空白字符
              */
             match(lineNumberCharArray)
         }
