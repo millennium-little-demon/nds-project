@@ -176,29 +176,18 @@ class NdsParse(string: String) {
 
         }
 
-        val r = mutableListOf<NdsAst>()
-        var tempIndex = 0
-        while (tempIndex < blockAstList.size) {
-            if (blockAstList[tempIndex] !is SqlAst) {
-                r.add(blockAstList[tempIndex])
-                tempIndex += 1
-                continue
+        return mutableListOf<NdsAst>().apply {
+            var tempIndex: Int
+            for (ndsAst in blockAstList) {
+                tempIndex = size - 1
+                if (ndsAst is SqlAst && this[tempIndex] is SqlAst) {
+                    val sql = (this[tempIndex] as SqlAst).sql + " " + ndsAst.sql
+                    this[tempIndex] = SqlAst(sql = sql)
+                } else {
+                    this.add(ndsAst)
+                }
             }
-
-            var index = 1
-            while ((index + tempIndex) < blockAstList.size && blockAstList[index + tempIndex] is SqlAst) index += 1
-
-            if (index == 0) {
-                r.add(blockAstList[tempIndex])
-                break
-            }
-            blockAstList.subList(tempIndex, tempIndex + index).joinToString(" ", postfix = " ") { (it as SqlAst).sql }.run { r.add(SqlAst(sql = this)) }
-            tempIndex += index
-
         }
-
-        return r
-
     }
 
 
