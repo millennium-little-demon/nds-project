@@ -6,45 +6,6 @@ package com.ck.nds.token
  * @author 陈坤
  * 2022/5/31
  */
-enum class NdsTokenType {
-
-    /**
-     * 普通字符
-     */
-    NORMAL_LITERAL,
-
-    /**
-     * 内置关键字相关 [NdsKeywordType]
-     */
-    KEYWORD,
-
-    /**
-     * 内置使用符号 [NdsSymbolType]
-     */
-    SYMBOL,
-
-    /**
-     * 字符字面量 '' 或 ""
-     */
-    STRING_LITERAL,
-
-    /**
-     * 数字字面量
-     */
-    NUMERIC_LITERAL,
-
-    /**
-     * 映射参数, 以冒号开头
-     * 对映射方法中的形参进行取值
-     *
-     * :userInfo.userName
-     * :map.keyName
-     * :userInfoList[0].userName
-     *
-     */
-    PARAM_VARIABLE,
-}
-
 interface NdsDerivedType
 
 /**
@@ -94,4 +55,41 @@ enum class NdsSymbolType(val symbolText: String) : NdsDerivedType {
     AND("&&"),
     OR("||"),
     BANG("!"),
+}
+
+
+enum class NdsNormalLiteralType : NdsDerivedType {
+
+    GENERIC,
+    
+    PACKAGE
+
+}
+
+/**
+ * 常见字面量类型
+ */
+enum class NdsLiteralType : NdsDerivedType {
+
+    /**
+     * '' 或 ""
+     */
+    STRING_LITERAL,
+
+    /**
+     * 数字
+     */
+    NUMERIC_LITERAL,
+
+}
+
+/**
+ * 固定前缀类型
+ */
+enum class NdsFixedPrefixType(val prefixText: String) : NdsDerivedType {
+
+    COLON_PREFIX(":"),
+
+    DOLLAR_PREFIX("$")
+
 }

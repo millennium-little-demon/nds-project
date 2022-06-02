@@ -1,9 +1,9 @@
 package com.ck.nds.lexer
 
+import com.ck.nds.lexer.matcher.FixedPrefixMatcher
+import com.ck.nds.lexer.matcher.LiteralMatcher
 import com.ck.nds.lexer.matcher.NdsSkipCharMatcher
 import com.ck.nds.lexer.matcher.NormalLiteralMatcher
-import com.ck.nds.lexer.matcher.ParamVariableMatcher
-import com.ck.nds.lexer.matcher.StringMatcher
 import com.ck.nds.token.*
 
 /**
@@ -49,7 +49,7 @@ class NdsLexer(private val lineNumberCharArray: LineNumberCharArray) {
              * 其他token匹配器
              */
             val otherMatchers = listOf(
-                StringMatcher,
+                LiteralMatcher,
                 NormalLiteralMatcher
             )
 
@@ -59,7 +59,7 @@ class NdsLexer(private val lineNumberCharArray: LineNumberCharArray) {
                  */
                 listOf(
                     NdsSkipCharMatcher,
-                    ParamVariableMatcher,
+                    FixedPrefixMatcher,
                 ),
                 keywordMatchers,
                 symbolMatchers,

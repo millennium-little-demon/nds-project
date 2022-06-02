@@ -3,6 +3,7 @@ package com.ck.nds.token
 import com.ck.nds.lexer.LineNumberCharArray
 
 /**
+ * 词法解析 token 接口
  *
  * @author 陈坤
  * 2022/5/31
@@ -17,13 +18,19 @@ sealed interface NdsToken {
      * token 所在的行号
      */
     val lineNumber: Int
+
+    /**
+     * token所在行的开始位置
+     */
     val lineIndex: Int
-    val ndsTokenType: NdsTokenType
+
+    /**
+     * token 类型, 具体类型 [NdsDerivedType] 子枚举类
+     */
+    val tokenType: NdsDerivedType
 }
 
-sealed class NdsAbstractToken(
-    lineNumberCharArray: LineNumberCharArray,
-) : NdsToken {
+sealed class NdsAbstractToken(lineNumberCharArray: LineNumberCharArray) : NdsToken {
 
     /**
      * 创建对象时获取字符位置
@@ -47,31 +54,25 @@ sealed class NdsAbstractToken(
  */
 data class NdsNormalLiteralToken(
     override val string: String,
+    override val tokenType: NdsNormalLiteralType,
     private val lineNumberCharArray: LineNumberCharArray,
 ) : NdsAbstractToken(lineNumberCharArray) {
 
-    override val ndsTokenType: NdsTokenType = NdsTokenType.NORMAL_LITERAL
-    override fun toString() = "NdsNormalLiteralToken(string='$string', ${super.lineToString()}, ndsTokenType=$ndsTokenType)"
-}
-
-data class NdsStringToken(
-    override val string: String,
-    private val lineNumberCharArray: LineNumberCharArray,
-) : NdsAbstractToken(lineNumberCharArray) {
-
-    override val ndsTokenType = NdsTokenType.STRING_LITERAL
     override fun toString(): String {
-        return "StringToken(string='$string', ndsTokenType=$ndsTokenType)"
+        return "NdsNormalLiteralToken(string='$string', ${super.lineToString()}, tokenType=$tokenType)"
     }
-
 }
 
-data class NdsParamVariableToken(
+/**
+ *
+ */
+data class NdsLiteralToken(
     override val string: String,
+    override val tokenType: NdsLiteralType,
     private val lineNumberCharArray: LineNumberCharArray,
 ) : NdsAbstractToken(lineNumberCharArray) {
-    override val ndsTokenType = NdsTokenType.PARAM_VARIABLE
 
+    override fun toString() = "StringToken(string='$string', ${super.lineToString()}, ndsTokenType=$tokenType)"
 }
 
 /**
@@ -82,12 +83,11 @@ data class NdsParamVariableToken(
  */
 data class NdsKeywordToken(
     override val string: String,
-    val keywordType: NdsKeywordType,
+    override val tokenType: NdsKeywordType,
     private val lineNumberCharArray: LineNumberCharArray,
 ) : NdsAbstractToken(lineNumberCharArray) {
 
-    override val ndsTokenType: NdsTokenType = NdsTokenType.KEYWORD
-    override fun toString() = "NdsKeywordToken(string='$string', ${super.lineToString()}, keywordType=$keywordType, ndsTokenType=$ndsTokenType)"
+    override fun toString() = "NdsKeywordToken(string='$string', ${super.lineToString()}, keywordType=$tokenType)"
 }
 
 /**
@@ -98,10 +98,24 @@ data class NdsKeywordToken(
  */
 data class NdsSymbolToken(
     override val string: String,
-    val symbolType: NdsSymbolType,
+    override val tokenType: NdsSymbolType,
     private val lineNumberCharArray: LineNumberCharArray,
 ) : NdsAbstractToken(lineNumberCharArray) {
 
-    override val ndsTokenType: NdsTokenType = NdsTokenType.SYMBOL
-    override fun toString() = "NdsSymbolToken(string='$string',  ${super.lineToString()}, symbolType=$symbolType, ndsTokenType=$ndsTokenType)"
+    override fun toString() = "NdsSymbolToken(string='$string', ${super.lineToString()}, symbolType=$tokenType)"
+}
+
+/**
+ * 固定前缀类型
+ *
+ * @author 陈坤
+ * 2022/6/2
+ */
+data class NdsFixedPreFixToken(
+    override val string: String,
+    override val tokenType: NdsFixedPrefixType,
+    private val lineNumberCharArray: LineNumberCharArray,
+) : NdsAbstractToken(lineNumberCharArray) {
+
+    override fun toString() = "NdsFixedPreFixToken(string='$string', ${super.lineToString()}, ndsTokenType=$tokenType)"
 }

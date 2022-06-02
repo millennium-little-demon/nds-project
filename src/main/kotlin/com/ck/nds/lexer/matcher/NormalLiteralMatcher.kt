@@ -3,6 +3,7 @@ package com.ck.nds.lexer.matcher
 import com.ck.nds.lexer.LineNumberCharArray
 import com.ck.nds.lexer.NdsMatcher
 import com.ck.nds.token.NdsNormalLiteralToken
+import com.ck.nds.token.NdsNormalLiteralType
 import com.ck.nds.token.NdsToken
 
 /**
@@ -11,7 +12,6 @@ import com.ck.nds.token.NdsToken
  * 2022/6/1
  */
 object NormalLiteralMatcher : NdsMatcher {
-
 
     override fun match(lineNumberCharArray: LineNumberCharArray): NdsToken? {
 
@@ -31,11 +31,13 @@ object NormalLiteralMatcher : NdsMatcher {
 
         if (tempIndex > 0) {
             val readStr = lineNumberCharArray.read(tempIndex)
-            return NdsNormalLiteralToken(readStr, lineNumberCharArray)
+            return typeOf(readStr, lineNumberCharArray)
         }
 
-
-
         return null
+    }
+
+    private fun typeOf(str: String, lineNumberCharArray: LineNumberCharArray): NdsNormalLiteralToken {
+        return NdsNormalLiteralToken(str, NdsNormalLiteralType.GENERIC, lineNumberCharArray)
     }
 }

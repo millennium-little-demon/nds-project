@@ -31,16 +31,16 @@ class NdsParse(string: String) {
      * 匹配一个token
      * 如果匹配成功则消费当前token
      */
-    private inline fun <reified T : NdsToken> expectedMatch(derivedType: NdsDerivedType? = null): NdsToken {
+    private inline fun <reified T : NdsToken> expectedMatch(derivedType: NdsDerivedType? = null): T {
         /**
          * 下一个元素为空
          */
-        val lookahead = this._lookahead ?: throw throw SyntaxException("Unexpected end of input expected: ${T::class.simpleName}")
+        val lookahead = this._lookahead ?: throw SyntaxException("Unexpected end of input expected: ${T::class.simpleName}")
 
         /**
          * 期待类型不匹配
          */
-        if (lookahead !is T) throw throw SyntaxException("Unexpected end of input expected: ${T::class.simpleName} actual type: $lookahead")
+        if (lookahead !is T) throw SyntaxException("Unexpected end of input expected: ${T::class.simpleName} actual type: $lookahead")
 
         /**
          * token 子类对应的扩展类型为空直接返回
@@ -53,13 +53,9 @@ class NdsParse(string: String) {
             return lookahead
         }
 
-        val flag = when (lookahead) {
-            is NdsKeywordToken -> lookahead.keywordType == derivedType
-            is NdsSymbolToken -> lookahead.symbolType == derivedType
-            else -> false
+        if (lookahead.tokenType != derivedType) {
+            throw SyntaxException("Unexpected end of input expected: ${T::class.simpleName} actual type: $lookahead")
         }
-
-        if (!flag) throw SyntaxException("Unexpected end of input expected: ${T::class.simpleName} $derivedType")
 
         /**
          * 获取下一个
@@ -68,10 +64,10 @@ class NdsParse(string: String) {
         return lookahead
     }
 
-
-    private fun expectedMatchNormalLiteral() = expectedMatch<NdsNormalLiteralToken>()
-    private fun expectedMatchString() = expectedMatch<NdsStringToken>()
-    private fun expectedMatchParamVariable() = expectedMatch<NdsParamVariableToken>()
+    private fun expectedMatchNormalLiteral() = NdsNormalLiteralType.GENERIC.expectedMatch()
+    private fun NdsNormalLiteralType.expectedMatch() = expectedMatch<NdsNormalLiteralToken>(this)
+    private fun NdsLiteralType.expectedMatch() = expectedMatch<NdsLiteralToken>(this)
+    private fun NdsFixedPrefixType.expectedMatch() = expectedMatch<NdsFixedPreFixToken>(this)
     private fun NdsKeywordType.expectedMatch() = expectedMatch<NdsKeywordToken>(this)
     private fun NdsSymbolType.expectedMatch() = expectedMatch<NdsSymbolToken>(this)
 
@@ -90,7 +86,7 @@ class NdsParse(string: String) {
         val resultList = mutableListOf<NdsAst>()
 
 
-        val normalLiteral = expectedMatchNormalLiteral()
+        val normalLiteral = this.expectedMatchNormalLiteral()
         resultList.add(NamespaceAst(namespace = normalLiteral.string))
         this.metadataStatement()?.let { resultList.add(it) }
         this.fragmentStatement()?.let { resultList.add(it) }
@@ -103,7 +99,7 @@ class NdsParse(string: String) {
         val lookahead = this._lookahead ?: throw SyntaxException("文件信息不完整")
 
         if (lookahead !is NdsKeywordToken) return null
-        if (lookahead.keywordType != METADATA) return null
+        if (lookahead.tokenType != METADATA) return null
 
         METADATA.expectedMatch()
         L_BRACE.expectedMatch()
@@ -119,13 +115,13 @@ class NdsParse(string: String) {
     }
 
     private fun metadataInfo(): Pair<String, String>? {
-        if (this._lookahead == null || this._lookahead !is NdsNormalLiteralToken) return null
+        val lookahead = this._lookahead ?: return null
+        if (lookahead !is NdsFixedPreFixToken) return null
+        if (lookahead.tokenType != NdsFixedPrefixType.DOLLAR_PREFIX) return null
 
-        val key = this.expectedMatchNormalLiteral()
-        if (!key.string.startsWith("$") || key.string.length < 2) throw SyntaxException("#metadata key 字符必须以[\$]开头并且字符长度大于2!")
-
+        val key = NdsFixedPrefixType.DOLLAR_PREFIX.expectedMatch()
         COLON.expectedMatch()
-        val value = this.expectedMatchString()
+        val value = NdsLiteralType.STRING_LITERAL.expectedMatch()
         return key.string to value.string
     }
 
@@ -157,16 +153,15 @@ class NdsParse(string: String) {
                     blockAstList.add(SqlAst(sql = normalLiteral.string))
                 }
                 is NdsKeywordToken -> {
-                    when (lookahead.keywordType) {
+                    when (lookahead.tokenType) {
                         FRAGMENT -> TODO()
                         IF -> TODO()
                         WHEN -> TODO()
                         else -> break
                     }
-
                 }
-                is NdsParamVariableToken -> {
-                    val paramVariable = this.expectedMatchParamVariable()
+                is NdsFixedPreFixToken -> {
+                    val paramVariable = NdsFixedPrefixType.COLON_PREFIX.expectedMatch()
                     blockAstList.add(ParamVariableAst(varName = paramVariable.string))
                 }
                 else -> {
@@ -176,18 +171,7 @@ class NdsParse(string: String) {
 
         }
 
-        return mutableListOf<NdsAst>().apply {
-            var tempIndex: Int
-            for (ndsAst in blockAstList) {
-                tempIndex = size - 1
-                if (ndsAst is SqlAst && this[tempIndex] is SqlAst) {
-                    val sql = (this[tempIndex] as SqlAst).sql + " " + ndsAst.sql
-                    this[tempIndex] = SqlAst(sql = sql)
-                } else {
-                    this.add(ndsAst)
-                }
-            }
-        }
+        return blockAstList
     }
 
 

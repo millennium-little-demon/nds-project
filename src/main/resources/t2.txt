@@ -1,4 +1,4 @@
-#namespace com.ck.mapper.UserInfoMapper
+#namespace com.ck.mapper.UserInfoMap_per
 
 #metadata {
     $queryTimeout: "10s"
@@ -6,11 +6,11 @@
 }
 
 #mapper selectUserInfoByName {
-    #metadata {
-        $m1: "10s"
-        $q2: "101s"
-    }
-      
+   #metadata {
+       $m1: "10s"
+       $q2: "101s"
+   }
+   
 
     select * from user_info
      where
@@ -19,6 +19,6 @@
     //     user_name = :userName
     // }
 
-adsasda dsdas fgdsg 
+
 
 }
