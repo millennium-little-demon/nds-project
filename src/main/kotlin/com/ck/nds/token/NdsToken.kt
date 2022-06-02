@@ -111,7 +111,7 @@ data class NdsSymbolToken(
  * @author 陈坤
  * 2022/6/2
  */
-data class NdsFixedPreFixToken(
+data class NdsFixedPrefixToken(
     override val string: String,
     override val tokenType: NdsFixedPrefixType,
     private val lineNumberCharArray: LineNumberCharArray,

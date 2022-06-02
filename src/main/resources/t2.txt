@@ -5,20 +5,20 @@
     $queryTimeout2: "101s"
 }
 
-#mapper selectUserInfoByName {
-   #metadata {
-       $m1: "10s"
-       $q2: "101s"
-   }
-   
+ 
+    
+     //:userName?.isNotNull()
+    // :userName?.isNotNull(31, "1", true, null)
+   //  &userName?.isNotNull()
+         &userName?.isNotNull(31, "1", false, null)
 
+    
     select * from user_info
-     where
-    user_name = :userName
-    // #if :userName != null {
-    //     user_name = :userName
-    // }
-
-
-
-}
+    
+    where user_name = &userName?.isNotNull
+    where user_name = :userName -> :userName?.isNotNull
+    
+    
+    #if :userName?.isNotNull(1, "a", true, null) {
+    
+    }

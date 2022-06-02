@@ -2,7 +2,7 @@ package com.ck.nds.lexer.matcher
 
 import com.ck.nds.lexer.LineNumberCharArray
 import com.ck.nds.lexer.NdsMatcher
-import com.ck.nds.token.NdsFixedPreFixToken
+import com.ck.nds.token.NdsFixedPrefixToken
 import com.ck.nds.token.NdsFixedPrefixType
 import com.ck.nds.token.NdsToken
 
@@ -15,8 +15,9 @@ import com.ck.nds.token.NdsToken
 object FixedPrefixMatcher : NdsMatcher {
 
     private val listMatcher = arrayOf(
-        { lineNumberCharArray: LineNumberCharArray -> matchColonPrefixToken(lineNumberCharArray) },
-        { lineNumberCharArray: LineNumberCharArray -> matchDollarPrefixToken(lineNumberCharArray) },
+        { lineNumberCharArray: LineNumberCharArray -> match0(lineNumberCharArray, NdsFixedPrefixType.COLON_PREFIX) },
+        { lineNumberCharArray: LineNumberCharArray -> match0(lineNumberCharArray, NdsFixedPrefixType.DOLLAR_PREFIX) },
+        { lineNumberCharArray: LineNumberCharArray -> match0(lineNumberCharArray, NdsFixedPrefixType.AND_PREFIX) },
     )
 
     override fun match(lineNumberCharArray: LineNumberCharArray): NdsToken? {
@@ -34,39 +35,21 @@ object FixedPrefixMatcher : NdsMatcher {
         return null
     }
 
-    private fun matchColonPrefixToken(lineNumberCharArray: LineNumberCharArray): NdsFixedPreFixToken? {
-        if (lineNumberCharArray.peek(0) != ':') return null
-        if (!lineNumberCharArray.peek(1).isLowerCase()) return null
+    private fun match0(lineNumberCharArray: LineNumberCharArray, fixedPrefixType: NdsFixedPrefixType): NdsToken? {
+        // 检查前缀是否匹配, 否则返回 null
+        if (!lineNumberCharArray.match(fixedPrefixType.prefixText)) return null
+        // 前缀后面第一个字符必须是小写字符
+        if (!lineNumberCharArray.peek(fixedPrefixType.prefixSize() + 1).isLowerCase()) return null
 
-        var tempIndex = 2
+        var tempIndex = fixedPrefixType.prefixSize()
         var ch = lineNumberCharArray.peek(tempIndex)
-        while (ch.isLetterOrDigit() || ch == '.' || ch == '_') {
+        while (ch.isLetterOrDigit() || ch in fixedPrefixType.containChar) {
             tempIndex += 1
             ch = lineNumberCharArray.peek(tempIndex)
         }
 
-        ch = lineNumberCharArray.peek(tempIndex - 1)
-        if (!(ch.isLetterOrDigit() || ch == '_')) return null
-
         val readStr = lineNumberCharArray.read(tempIndex)
-        return NdsFixedPreFixToken(readStr, NdsFixedPrefixType.COLON_PREFIX, lineNumberCharArray)
+        return NdsFixedPrefixToken(readStr, fixedPrefixType, lineNumberCharArray)
     }
 
-    private fun matchDollarPrefixToken(lineNumberCharArray: LineNumberCharArray): NdsFixedPreFixToken? {
-        if (lineNumberCharArray.peek(0) != '$') return null
-        if (!lineNumberCharArray.peek(1).isLowerCase()) return null
-
-        var tempIndex = 2
-        var ch = lineNumberCharArray.peek(tempIndex)
-        while (ch.isLetterOrDigit() || ch == '_') {
-            tempIndex += 1
-            ch = lineNumberCharArray.peek(tempIndex)
-        }
-
-        ch = lineNumberCharArray.peek(tempIndex - 1)
-        if (!(ch.isLetterOrDigit() || ch == '_')) return null
-
-        val readStr = lineNumberCharArray.read(tempIndex)
-        return NdsFixedPreFixToken(readStr, NdsFixedPrefixType.DOLLAR_PREFIX, lineNumberCharArray)
-    }
 }

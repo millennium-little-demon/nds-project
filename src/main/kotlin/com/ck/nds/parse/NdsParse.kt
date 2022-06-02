@@ -30,6 +30,7 @@ class NdsParse(string: String) {
     /**
      * 匹配一个token
      * 如果匹配成功则消费当前token
+     * 否则抛出异常
      */
     private inline fun <reified T : NdsToken> expectedMatch(derivedType: NdsDerivedType? = null): T {
         /**
@@ -54,7 +55,7 @@ class NdsParse(string: String) {
         }
 
         if (lookahead.tokenType != derivedType) {
-            throw SyntaxException("Unexpected end of input expected: ${T::class.simpleName} actual type: $lookahead")
+            throw SyntaxException("Unexpected end of input expected: ${T::class.simpleName} - $derivedType actual type: $lookahead")
         }
 
         /**
@@ -64,21 +65,48 @@ class NdsParse(string: String) {
         return lookahead
     }
 
+    /**
+     * 对下一个token进行匹配, 成功返回true
+     */
+    private inline fun <reified T : NdsToken> checkTokenType(derivedType: NdsDerivedType? = null): Boolean {
+        val lookahead = this._lookahead ?: return false
+        if (lookahead !is T) return false
+
+        if (derivedType == null) {
+            return true
+        }
+        if (lookahead.tokenType == derivedType) {
+            return true
+        }
+
+        return false
+    }
+
     private fun expectedMatchNormalLiteral() = NdsNormalLiteralType.GENERIC.expectedMatch()
     private fun NdsNormalLiteralType.expectedMatch() = expectedMatch<NdsNormalLiteralToken>(this)
+    private fun NdsNormalLiteralType.checkTokenType() = checkTokenType<NdsNormalLiteralToken>(this)
+
     private fun NdsLiteralType.expectedMatch() = expectedMatch<NdsLiteralToken>(this)
-    private fun NdsFixedPrefixType.expectedMatch() = expectedMatch<NdsFixedPreFixToken>(this)
+    private fun NdsLiteralType.checkTokenType() = checkTokenType<NdsLiteralToken>(this)
+
+    private fun NdsFixedPrefixType.expectedMatch() = expectedMatch<NdsFixedPrefixToken>(this)
+    private fun NdsFixedPrefixType.checkTokenType() = checkTokenType<NdsFixedPrefixToken>(this)
+
+
     private fun NdsKeywordType.expectedMatch() = expectedMatch<NdsKeywordToken>(this)
+    private fun NdsKeywordType.checkTokenType() = checkTokenType<NdsKeywordToken>(this)
+
     private fun NdsSymbolType.expectedMatch() = expectedMatch<NdsSymbolToken>(this)
+    private fun NdsSymbolType.checkTokenType() = checkTokenType<NdsSymbolToken>(this)
 
 
     fun programAst(): NdsAst {
         return ProgramAst(
-            body = this.statement()
+            body = this.statementList()
         )
     }
 
-    private fun statement(): List<NdsAst> {
+    private fun statementList(): List<NdsAst> {
         val namespaceToken = NAMESPACE.expectedMatch()
         if (!(namespaceToken.lineNumber == 1 && namespaceToken.lineIndex == 0)) {
             throw SyntaxException("#namespace must be on the first line of the file!")
@@ -91,9 +119,67 @@ class NdsParse(string: String) {
         this.metadataStatement()?.let { resultList.add(it) }
         this.fragmentStatement()?.let { resultList.add(it) }
 
-        resultList.add(this.mapperStatement())
+        resultList.add(andCallFunctionStatement())
+//        resultList.add(this.mapperStatement())
         return resultList
     }
+
+    /**
+     * :userName?.isNotNull(x, x, ...)
+     */
+    private fun colonCallFunctionStatement(): NdsAst {
+        val variableExpr = NdsFixedPrefixType.COLON_PREFIX.expectedMatch()
+        QUESTION_DOT.expectedMatch()
+        val funName = this.expectedMatchNormalLiteral()
+        val paramList = this.functionParamStatement()
+
+        return ColonCallFunctionAst(
+            paramVariable = variableExpr.string,
+            funcName = funName.string,
+            paramList = paramList
+        )
+    }
+
+    /**
+     * &userName?.isNotNull(x, x, ...)
+     */
+    private fun andCallFunctionStatement(): NdsAst {
+        val variableExpr = NdsFixedPrefixType.AND_PREFIX.expectedMatch()
+        QUESTION_DOT.expectedMatch()
+
+        val funName = this.expectedMatchNormalLiteral()
+        val paramList = this.functionParamStatement()
+        return AndCallFunctionAst(
+            paramVariable = variableExpr.string,
+            funcName = funName.string,
+            paramList = paramList
+        )
+    }
+
+    /**
+     * 函数参数信息
+     */
+    private fun functionParamStatement(): List<NdsAst> {
+        if (!L_PAREN.checkTokenType()) return emptyList()
+
+        val paramList = mutableListOf<NdsAst>()
+        L_PAREN.expectedMatch()
+
+        while (true) {
+            if (!checkTokenType<NdsLiteralToken>()) {
+                break
+            }
+            val literalToken = this.literal()
+            paramList.add(literalToken)
+            if (COMMA.checkTokenType()) COMMA.expectedMatch() else break
+        }
+
+
+        R_PAREN.expectedMatch()
+
+        return paramList
+    }
+
 
     private fun metadataStatement(): NdsAst? {
         val lookahead = this._lookahead ?: throw SyntaxException("文件信息不完整")
@@ -116,7 +202,7 @@ class NdsParse(string: String) {
 
     private fun metadataInfo(): Pair<String, String>? {
         val lookahead = this._lookahead ?: return null
-        if (lookahead !is NdsFixedPreFixToken) return null
+        if (lookahead !is NdsFixedPrefixToken) return null
         if (lookahead.tokenType != NdsFixedPrefixType.DOLLAR_PREFIX) return null
 
         val key = NdsFixedPrefixType.DOLLAR_PREFIX.expectedMatch()
@@ -160,7 +246,7 @@ class NdsParse(string: String) {
                         else -> break
                     }
                 }
-                is NdsFixedPreFixToken -> {
+                is NdsFixedPrefixToken -> {
                     val paramVariable = NdsFixedPrefixType.COLON_PREFIX.expectedMatch()
                     blockAstList.add(ParamVariableAst(varName = paramVariable.string))
                 }
@@ -174,9 +260,28 @@ class NdsParse(string: String) {
         return blockAstList
     }
 
+    private fun relationalExpression() {
+
+    }
+
 
     private fun paramVariableStatement() {
 
+    }
+
+    private fun literal(): NdsAst {
+        if (!checkTokenType<NdsLiteralToken>()) {
+            throw SyntaxException("Literal: unexpected literal production")
+        }
+
+        val literalToken = expectedMatch<NdsLiteralToken>()
+        val string = literalToken.string
+        return when (literalToken.tokenType) {
+            NdsLiteralType.STRING_LITERAL -> StringAst(value = string)
+            NdsLiteralType.NUMERIC_LITERAL -> NumberAst(value = string.toInt())
+            NdsLiteralType.BOOLEAN_LITERAL -> BooleanAst(value = string.toBooleanStrict())
+            NdsLiteralType.NULL_LITERAL -> NullAst
+        }
     }
 
 

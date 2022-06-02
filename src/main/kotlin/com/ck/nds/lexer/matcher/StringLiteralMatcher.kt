@@ -13,7 +13,7 @@ import com.ck.nds.token.NdsToken
  * @author 陈坤
  * 2022/5/29 22:50
  */
-object LiteralMatcher : NdsMatcher {
+object StringLiteralMatcher : NdsMatcher {
 
     override fun match(lineNumberCharArray: LineNumberCharArray): NdsToken? {
         if (lineNumberCharArray.peek(0) != '"') return null

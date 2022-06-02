@@ -34,8 +34,6 @@ enum class NdsKeywordType(val keyword: String) : NdsDerivedType {
  * * 2022/5/31
  */
 enum class NdsSymbolType(val symbolText: String) : NdsDerivedType {
-    TRUE("true"),
-    FALSE("false"),
     L_BRACE("{"),
     R_BRACE("}"),
     L_PAREN("("),
@@ -61,7 +59,7 @@ enum class NdsSymbolType(val symbolText: String) : NdsDerivedType {
 enum class NdsNormalLiteralType : NdsDerivedType {
 
     GENERIC,
-    
+
     PACKAGE
 
 }
@@ -81,15 +79,30 @@ enum class NdsLiteralType : NdsDerivedType {
      */
     NUMERIC_LITERAL,
 
+    /**
+     * boolean
+     */
+    BOOLEAN_LITERAL,
+
+    /**
+     * null
+     */
+    NULL_LITERAL,
+
 }
 
 /**
  * 固定前缀类型
  */
-enum class NdsFixedPrefixType(val prefixText: String) : NdsDerivedType {
+enum class NdsFixedPrefixType(val prefixText: String, val containChar: CharArray) : NdsDerivedType {
 
-    COLON_PREFIX(":"),
+    COLON_PREFIX(":", charArrayOf('.', '_')),
 
-    DOLLAR_PREFIX("$")
+    DOLLAR_PREFIX("$", charArrayOf('_')),
+
+    AND_PREFIX("&", charArrayOf('.', '_'));
+
+    fun prefixSize() = this.prefixText.length
+
 
 }

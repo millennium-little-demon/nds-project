@@ -2,9 +2,7 @@ package com.ck.nds.lexer.matcher
 
 import com.ck.nds.lexer.LineNumberCharArray
 import com.ck.nds.lexer.NdsMatcher
-import com.ck.nds.token.NdsNormalLiteralToken
-import com.ck.nds.token.NdsNormalLiteralType
-import com.ck.nds.token.NdsToken
+import com.ck.nds.token.*
 
 /**
  *
@@ -37,7 +35,12 @@ object NormalLiteralMatcher : NdsMatcher {
         return null
     }
 
-    private fun typeOf(str: String, lineNumberCharArray: LineNumberCharArray): NdsNormalLiteralToken {
-        return NdsNormalLiteralToken(str, NdsNormalLiteralType.GENERIC, lineNumberCharArray)
+    private fun typeOf(str: String, lineNumberCharArray: LineNumberCharArray): NdsToken {
+        return when (str) {
+            "true", "false" -> NdsLiteralToken(str, NdsLiteralType.BOOLEAN_LITERAL, lineNumberCharArray)
+            "null" -> NdsLiteralToken(str, NdsLiteralType.NULL_LITERAL, lineNumberCharArray)
+            else -> NdsNormalLiteralToken(str, NdsNormalLiteralType.GENERIC, lineNumberCharArray)
+        }
+
     }
 }

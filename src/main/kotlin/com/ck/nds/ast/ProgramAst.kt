@@ -20,6 +20,43 @@ data class MetadataInfoAst(
     val metadataMap: Map<String, String>,
 ) : NdsAst
 
+
+data class ColonCallFunctionAst(
+    val type: String = "ColonCallFunctionAst",
+    val paramVariable: String,
+    val funcName: String,
+    val paramList: List<NdsAst>,
+) : NdsAst
+
+data class AndCallFunctionAst(
+    val type: String = "AndCallFunctionAst",
+    val paramVariable: String,
+    val funcName: String,
+    val paramList: List<NdsAst>,
+) : NdsAst
+
+data class BooleanAst(
+    val type: String = "BooleanAst",
+    val value: Boolean,
+) : NdsAst
+
+data class NumberAst(
+    val type: String = "NumberAst",
+    val value: Number,
+) : NdsAst
+
+data class StringAst(
+    val type: String = "StringAst",
+    val value: String,
+) : NdsAst
+
+@Suppress("unused")
+object NullAst : NdsAst {
+
+    fun getType() = "NullAst"
+
+}
+
 data class MappingAst(
     val type: String = "MappingAst",
     val mappingName: String,
