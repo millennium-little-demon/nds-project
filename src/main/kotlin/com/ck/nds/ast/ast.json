@@ -3,35 +3,35 @@
   "body": [
     {
       "type": "NamespaceAst",
-      "namespace": "com.ck.mapper.UserInfoMapper"
+      "namespace": "com.ck.mapper.UserInfoMap_per"
     },
     {
-      "type": "MetadataInfoAst",
-      "metadataMap": {
-        "$queryTimeout": "10s",
-        "$queryTimeout2": "101s"
-      }
-    },
-    {
-      "type": "MappingAst",
-      "mappingName": "selectUserInfoByName",
-      "body": [
+      "type": "WhenStatementAst",
+      "ifStatementAst": [
         {
-          "type": "MetadataInfoAst",
-          "metadataMap": {
-            "$m1": "10s",
-            "$q2": "101s"
+          "type": "IfStatementAst",
+          "expression": {
+            "type": "BooleanAst",
+            "value": true
+          },
+          "consequent": {
+            "type": "StringAst",
+            "value": "aa"
           }
         },
         {
-          "type": "SqlAst",
-          "sql": "select * from user_info where user_name = "
-        },
-        {
-          "type": "ParamVariableAst",
-          "varName": ":userName"
+          "type": "IfStatementAst",
+          "expression": {
+            "type": "StringAst",
+            "value": "abc"
+          },
+          "consequent": {
+            "type": "NumberAst",
+            "value": 21245
+          }
         }
       ]
     }
   ]
 }
+

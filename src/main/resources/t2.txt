@@ -1,22 +1,48 @@
 #namespace com.ck.mapper.UserInfoMap_per
 
-#metadata {
-    $queryTimeout: "10s"
-    $queryTimeout2: "101s"
+// #metadata {
+//     $queryTimeout: "10s"
+//     $queryTimeout2: "101s"
+// }
+
+     // ::userName?.isNotNull()
+    // :userName?.isNotNull(31, "1", true, null)
+     // &userName?.isNotNull()
+         // &userName?.isNotNull(31, "1", false, null)
+
+//#if false {
+//    "abc"
+//}
+
+
+
+#when {
+    true -> {
+        "aa"   
+    }
+    
+      "abc" -> {
+            21245   
+        }
+    else -> {
+        "aaa"
+    }
 }
 
- 
-    
-     //:userName?.isNotNull()
-    // :userName?.isNotNull(31, "1", true, null)
-   //  &userName?.isNotNull()
-         &userName?.isNotNull(31, "1", false, null)
+1, true, null, 
+:userName
+:userName?.isNotNull -> boolean
+:userName::concat -> sql
 
-    
+
     select * from user_info
     
-    where user_name = &userName?.isNotNull
-    where user_name = :userName -> :userName?.isNotNull
+    // 简单赋值
+    where user_name = :userInfo.userName
+    // 对参数函数调用函数, 条件满足后进行赋值
+    where user_name = ::userInfo.userName?.isNotNull
+    // 判断条件中对参数的方法调用需要使用 & 
+    where user_name = :userName -> &userInfo.userName?.isNotNull
     
     
     #if :userName?.isNotNull(1, "a", true, null) {

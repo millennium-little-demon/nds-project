@@ -16,6 +16,7 @@ object FixedPrefixMatcher : NdsMatcher {
 
     private val listMatcher = arrayOf(
         { lineNumberCharArray: LineNumberCharArray -> match0(lineNumberCharArray, NdsFixedPrefixType.COLON_PREFIX) },
+        { lineNumberCharArray: LineNumberCharArray -> match0(lineNumberCharArray, NdsFixedPrefixType.COLON_COLON_PREFIX) },
         { lineNumberCharArray: LineNumberCharArray -> match0(lineNumberCharArray, NdsFixedPrefixType.DOLLAR_PREFIX) },
         { lineNumberCharArray: LineNumberCharArray -> match0(lineNumberCharArray, NdsFixedPrefixType.AND_PREFIX) },
     )

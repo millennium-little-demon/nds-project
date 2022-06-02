@@ -20,8 +20,7 @@ enum class NdsKeywordType(val keyword: String) : NdsDerivedType {
     FRAGMENT("#fragment"),
     MAPPER("#mapper"),
     IF("#if"),
-
-    //    ELSE("else"),
+    ELSE("else"),
     WHEN("#when"),
     ;
 
@@ -39,20 +38,22 @@ enum class NdsSymbolType(val symbolText: String) : NdsDerivedType {
     L_PAREN("("),
     R_PAREN(")"),
     COMMA(","),
-    DOT("."),
     COLON(":"),
     QUESTION_DOT("?."),
     ARROW("->"),
+
+    BANG("!"),
     GT(">"),
     LT("<"),
-    COLON_COLON("::"),
-    EQUAL("=="),
-    NOT_EQUAL("!="),
     LE("<="),
     GE(">="),
+
+    EQUAL("=="),
+    NOT_EQUAL("!="),
+
     AND("&&"),
     OR("||"),
-    BANG("!"),
+
 }
 
 
@@ -96,7 +97,10 @@ enum class NdsLiteralType : NdsDerivedType {
  */
 enum class NdsFixedPrefixType(val prefixText: String, val containChar: CharArray) : NdsDerivedType {
 
+
     COLON_PREFIX(":", charArrayOf('.', '_')),
+
+    COLON_COLON_PREFIX("::", charArrayOf('.', '_')),
 
     DOLLAR_PREFIX("$", charArrayOf('_')),
 

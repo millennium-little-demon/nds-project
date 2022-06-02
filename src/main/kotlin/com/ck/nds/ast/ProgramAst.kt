@@ -73,33 +73,22 @@ data class ParamVariableAst(
     val varName: String,
 ) : NdsAst
 
-data class IfAst(
-    val type: String = "IfAst",
-    val expression: Expression,
+data class IfStatementAst(
+    val type: String = "IfStatementAst",
+    val test: NdsAst,
     val consequent: NdsAst,
 ) : NdsAst
 
-data class Expression(
+data class WhenStatementAst(
+    val type: String = "WhenStatementAst",
+    val ifStatementAst: List<IfStatementAst>,
+    val elseStatementAst: NdsAst?,
+) : NdsAst
+
+data class ExpressionAst(
     val type: String = "Expression",
     val operator: String,
     val left: NdsAst,
     val right: NdsAst,
 ) : NdsAst
 
-
-data class LogicalOR(
-    val type: String = "LogicalOR",
-//    val left: LogicalOR
-    val logicalAND: LogicalAND,
-) : NdsAst
-
-data class LogicalAND(
-    val type: String = "LogicalAND",
-    val opt: String,
-
-    ) : NdsAst
-
-data class Equality(
-    val type: String = "Equality",
-
-    ) : NdsAst
