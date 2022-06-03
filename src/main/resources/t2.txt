@@ -1,42 +1,9 @@
 #namespace com.ck.mapper.UserInfoMapper
 
-#metadata {
-    $queryTimeout: "10s"
-    $queryTimeout2: "101s"
-}
-
-#fragment all_field {
-    select * from user_info  
-}
- 
-     // ::userName?.isNotNull()
-    // :userName?.isNotNull(31, "1", true, null)
-     // &userName?.isNotNull()
-         // &userName?.isNotNull(31, "1", false, null)
-
-
 #mapper selectUserInfoByName {
-    
-   // #metadata {
-   //     $abc: "31"
-   // }
-   
-    
-    #fragmentRef all_field
-    where user_name = ::user_name?.test
-    
-    #if &userName?.test {
-         where user_name = :userName
-    }
+    select * from user_info
+    where user_name = ::userName?.test   
 
-    #when {
-        &userName?.test == 1 -> {
-            and user_age = :userAge
-        }
-        else -> {
-            and user_age = :userAge
-        }
-    }
 }
 
 
@@ -60,3 +27,9 @@
     // #if :userName?.isNotNull(1, "a", true, null) {
     
    // }
+ 
+     // ::userName?.isNotNull()
+    // :userName?.isNotNull(31, "1", true, null)
+     // &userName?.isNotNull()
+         // &userName?.isNotNull(31, "1", false, null)
+

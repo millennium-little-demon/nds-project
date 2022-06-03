@@ -10,18 +10,26 @@ data class ProgramAst(
     val body: List<NdsAst>?,
 ) : NdsAst
 
+/**
+ * #namespace com.ck.mapper.UserInfoMapper
+ */
 data class NamespaceAst(
     val type: String = "NamespaceAst",
     val namespace: String,
 ) : NdsAst
 
+/**
+ * #metadata {
+ * [MetadataAst]
+ * }
+ */
 data class MetadataStatementAst(
     val type: String = "MetadataStatementAst",
     val metadataInfo: List<MetadataAst>,
 ) : NdsAst
 
 data class MetadataAst(
-    val type: String = "MetadataInfoAst",
+    val type: String = "MetadataAst",
     val metadataKey: String,
     val metadataVal: String,
 ) : NdsAst
@@ -32,24 +40,34 @@ data class FragmentAst(
     val fragmentList: List<NdsAst>,
 ) : NdsAst
 
+/**
+ * #mapper xxx {
+ * }
+ */
+data class MappingAst(
+    val type: String = "MappingAst",
+    val mappingName: String,
+    val body: List<NdsAst>,
+) : NdsAst
+
+/**
+ * #fragmentRef xxx
+ */
 data class FragmentRefAst(
     val type: String = "FragmentRefAst",
     val fragmentRefName: String,
 ) : NdsAst
 
-data class ColonCallFunctionAst(
-    val type: String = "ColonCallFunctionAst",
-    val paramVariable: String,
+/**
+ * userName?.test(31, "1", true, null)
+ */
+data class CallFunctionAst(
+    val type: String = "CallFunctionAst",
+    val paramExpr: String,
     val funcName: String,
     val paramList: List<NdsAst>,
 ) : NdsAst
 
-data class AndCallFunctionAst(
-    val type: String = "AndCallFunctionAst",
-    val paramVariable: String,
-    val funcName: String,
-    val paramList: List<NdsAst>,
-) : NdsAst
 
 data class BooleanAst(
     val type: String = "BooleanAst",
@@ -68,39 +86,50 @@ data class StringAst(
 
 @Suppress("unused")
 object NullAst : NdsAst {
-
     fun getType() = "NullAst"
-
 }
-
-data class MappingAst(
-    val type: String = "MappingAst",
-    val mappingName: String,
-    val body: List<NdsAst>,
-) : NdsAst
 
 data class SqlAst(
     val type: String = "SqlAst",
     val sql: String,
 ) : NdsAst
 
+/**
+ * :userInfo.userName
+ */
 data class ParamVariableAst(
     val type: String = "ParamVariableAst",
-    val varName: String,
+    val paramExpr: String,
 ) : NdsAst
 
+/**
+ * #if [ExpressionAst] {
+ * }
+ */
 data class IfStatementAst(
     val type: String = "IfStatementAst",
     val test: NdsAst,
-    val consequent: List<NdsAst>,
+    val block: List<NdsAst>,
 ) : NdsAst
 
+/**
+ * #when {
+ * [IfStatementAst]
+ * [IfStatementAst]
+ * [IfStatementAst]
+ * ...
+ * else -> {}
+ * }
+ */
 data class WhenStatementAst(
     val type: String = "WhenStatementAst",
-    val ifStatementAst: List<NdsAst>,
-    val elseStatementAst: List<NdsAst>?,
+    val whenBranchList: List<IfStatementAst>,
+    val elseBlock: List<NdsAst>?,
 ) : NdsAst
 
+/**
+ * 表达式
+ */
 data class ExpressionAst(
     val type: String = "Expression",
     val operator: String,

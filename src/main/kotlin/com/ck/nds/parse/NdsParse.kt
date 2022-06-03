@@ -72,9 +72,10 @@ class NdsParse(string: String) {
     /**
      * 对下一个token进行匹配, 成功返回true
      */
-    private inline fun <reified T : NdsToken> checkTokenType(derivedType: NdsDerivedType? = null): Boolean {
+    private inline fun <reified T : NdsToken> checkTokenType(derivedType: NdsDerivedType? = null, lineNumber: Int? = null): Boolean {
         val lookahead = this._lookahead ?: return false
         if (lookahead !is T) return false
+        if (lineNumber != null && lookahead.lineNumber != lineNumber) return false
 
         if (derivedType == null) {
             return true
@@ -88,10 +89,10 @@ class NdsParse(string: String) {
 
     private fun expectedMatchNormalLiteral() = GENERIC.expectedMatch()
     private fun NdsNormalLiteralType.expectedMatch() = expectedMatch<NdsNormalLiteralToken>(this)
-    private fun NdsNormalLiteralType.checkTokenType() = checkTokenType<NdsNormalLiteralToken>(this)
+    private fun NdsNormalLiteralType.checkTokenType(tokenLine: Int? = null) = checkTokenType<NdsNormalLiteralToken>(this, tokenLine)
 
     private fun NdsLiteralType.expectedMatch() = expectedMatch<NdsLiteralToken>(this)
-    private fun NdsLiteralType.checkTokenType() = checkTokenType<NdsLiteralToken>(this)
+//    private fun NdsLiteralType.checkTokenType() = checkTokenType<NdsLiteralToken>(this)
 
     private fun NdsFixedPrefixType.expectedMatch() = expectedMatch<NdsFixedPrefixToken>(this)
     private fun NdsFixedPrefixType.checkTokenType() = checkTokenType<NdsFixedPrefixToken>(this)
@@ -226,7 +227,6 @@ class NdsParse(string: String) {
                 WHEN.checkTokenType() -> this.whenStatement()
                 checkTokenType<NdsLiteralToken>() -> this.literal()
                 FRAGMENT_REF.checkTokenType() -> this.fragmentRefStatement()
-                COLON_COLON_PREFIX.checkTokenType() -> this.colonColonCallFunctionStatement()
                 else -> throw SyntaxException("mapper 中语法错误, 无法处理: ${this._lookahead}")
             }
 
@@ -236,9 +236,27 @@ class NdsParse(string: String) {
         return blockList
     }
 
-    private fun sqlStatement(): SqlAst {
+    private fun sqlStatement(): NdsAst {
         val token = GENERIC.expectedMatch()
-        return SqlAst(sql = token.string)
+        val tokenList = mutableListOf<NdsToken>(token)
+
+        while (GENERIC.checkTokenType(token.lineNumber)) {
+            val expectedMatch = GENERIC.expectedMatch()
+            tokenList.add(expectedMatch)
+        }
+
+        val sql = tokenList.joinToString(" ") { it.string }
+        val sqlAst = SqlAst(sql = sql)
+
+        // 如果当前行存在 判断赋值时
+        if (COLON_COLON_PREFIX.checkTokenType()) {
+            val func = this.colonColonCallFunctionStatement()
+            return IfStatementAst(
+                test = func,
+                block = listOf(sqlAst, ParamVariableAst(paramExpr = func.paramExpr))
+            )
+        }
+        return sqlAst
     }
 
     private fun ifStatement(): NdsAst {
@@ -251,7 +269,7 @@ class NdsParse(string: String) {
 
         return IfStatementAst(
             test = test,
-            consequent = block
+            block = block
         )
     }
 
@@ -269,8 +287,8 @@ class NdsParse(string: String) {
         R_BRACE.expectedMatch()
 
         return WhenStatementAst(
-            ifStatementAst = ifStatementAstList,
-            elseStatementAst = elseAst
+            whenBranchList = ifStatementAstList,
+            elseBlock = elseAst
         )
 
     }
@@ -297,7 +315,7 @@ class NdsParse(string: String) {
 
         return IfStatementAst(
             test = expression,
-            consequent = blockList
+            block = blockList
         )
 
     }
@@ -319,7 +337,7 @@ class NdsParse(string: String) {
     /**
      * ==, !=
      */
-    private fun equalityExpression() = commonExpr({ EQUAL.checkTokenType() || NOT_EQUAL.checkTokenType() }, { this.relationalExpression() })
+    private fun equalityExpression() = commonExpr({ EQUAL.checkTokenType() || NOT_EQUAL.checkTokenType() }) { this.relationalExpression() }
 
     /**
      * >, >=, <, <=
@@ -365,24 +383,27 @@ class NdsParse(string: String) {
         }
     }
 
+    /**
+     * :userInfo.userName
+     */
     private fun paramVariableStatement(): ParamVariableAst {
         val fixedPrefixToken = COLON_PREFIX.expectedMatch()
-        return ParamVariableAst(varName = fixedPrefixToken.string)
+        return ParamVariableAst(paramExpr = fixedPrefixToken.string.substring(1))
     }
 
 
     /**
      * ::userName?.isNotNull(x, x, ...)
      */
-    private fun colonColonCallFunctionStatement(): NdsAst {
+    private fun colonColonCallFunctionStatement(): CallFunctionAst {
         val variableExpr = COLON_COLON_PREFIX.expectedMatch()
 
         QUESTION_DOT.expectedMatch()
         val funName = this.expectedMatchNormalLiteral()
         val paramList = this.functionParamStatement()
 
-        return ColonCallFunctionAst(
-            paramVariable = variableExpr.string,
+        return CallFunctionAst(
+            paramExpr = variableExpr.string.substring(2),
             funcName = funName.string,
             paramList = paramList
         )
@@ -397,8 +418,8 @@ class NdsParse(string: String) {
 
         val funName = this.expectedMatchNormalLiteral()
         val paramList = this.functionParamStatement()
-        return AndCallFunctionAst(
-            paramVariable = variableExpr.string,
+        return CallFunctionAst(
+            paramExpr = variableExpr.string.substring(1),
             funcName = funName.string,
             paramList = paramList
         )
