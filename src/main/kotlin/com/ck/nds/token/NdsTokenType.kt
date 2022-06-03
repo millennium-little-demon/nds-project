@@ -17,6 +17,11 @@ interface NdsDerivedType
 enum class NdsKeywordType(val keyword: String) : NdsDerivedType {
     NAMESPACE("#namespace"),
     METADATA("#metadata"),
+
+    /**
+     * 优先匹配 [FRAGMENT_REF]
+     */
+    FRAGMENT_REF("#fragmentRef"),
     FRAGMENT("#fragment"),
     MAPPER("#mapper"),
     IF("#if"),

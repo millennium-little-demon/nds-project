@@ -1,50 +1,62 @@
-#namespace com.ck.mapper.UserInfoMap_per
+#namespace com.ck.mapper.UserInfoMapper
 
-// #metadata {
-//     $queryTimeout: "10s"
-//     $queryTimeout2: "101s"
-// }
+#metadata {
+    $queryTimeout: "10s"
+    $queryTimeout2: "101s"
+}
 
+#fragment all_field {
+    select * from user_info  
+}
+ 
      // ::userName?.isNotNull()
     // :userName?.isNotNull(31, "1", true, null)
      // &userName?.isNotNull()
          // &userName?.isNotNull(31, "1", false, null)
 
-//#if false {
-//    "abc"
-//}
 
-
-
-#when {
-    true -> {
-        "aa"   
-    }
+#mapper selectUserInfoByName {
     
-      "abc" -> {
-            21245   
+   // #metadata {
+   //     $abc: "31"
+   // }
+   
+    
+    #fragmentRef all_field
+    where user_name = ::user_name?.test
+    
+    #if &userName?.test {
+         where user_name = :userName
+    }
+
+    #when {
+        &userName?.test == 1 -> {
+            and user_age = :userAge
         }
-    else -> {
-        "aaa"
+        else -> {
+            and user_age = :userAge
+        }
     }
 }
 
-1, true, null, 
-:userName
-:userName?.isNotNull -> boolean
-:userName::concat -> sql
 
 
-    select * from user_info
+// 1, true, null, 
+// :userName
+// :userName?.isNotNull -> boolean
+// :userName::concat -> sql
+
+
+   // select * from user_info
     
     // 简单赋值
-    where user_name = :userInfo.userName
+    // where user_name = :userInfo.userName
     // 对参数函数调用函数, 条件满足后进行赋值
-    where user_name = ::userInfo.userName?.isNotNull
+   //  where user_name = ::userInfo.userName?.isNotNull
     // 判断条件中对参数的方法调用需要使用 & 
-    where user_name = :userName -> &userInfo.userName?.isNotNull
+  //  where user_name = :userName -> &userInfo.userName?.isNotNull
     
     
-    #if :userName?.isNotNull(1, "a", true, null) {
+    // #if :userName?.isNotNull(1, "a", true, null) {
     
-    }
+   // }

@@ -15,11 +15,27 @@ data class NamespaceAst(
     val namespace: String,
 ) : NdsAst
 
-data class MetadataInfoAst(
-    val type: String = "MetadataInfoAst",
-    val metadataMap: Map<String, String>,
+data class MetadataStatementAst(
+    val type: String = "MetadataStatementAst",
+    val metadataInfo: List<MetadataAst>,
 ) : NdsAst
 
+data class MetadataAst(
+    val type: String = "MetadataInfoAst",
+    val metadataKey: String,
+    val metadataVal: String,
+) : NdsAst
+
+data class FragmentAst(
+    val type: String = "FragmentAst",
+    val fragmentName: String,
+    val fragmentList: List<NdsAst>,
+) : NdsAst
+
+data class FragmentRefAst(
+    val type: String = "FragmentRefAst",
+    val fragmentRefName: String,
+) : NdsAst
 
 data class ColonCallFunctionAst(
     val type: String = "ColonCallFunctionAst",
@@ -76,13 +92,13 @@ data class ParamVariableAst(
 data class IfStatementAst(
     val type: String = "IfStatementAst",
     val test: NdsAst,
-    val consequent: NdsAst,
+    val consequent: List<NdsAst>,
 ) : NdsAst
 
 data class WhenStatementAst(
     val type: String = "WhenStatementAst",
-    val ifStatementAst: List<IfStatementAst>,
-    val elseStatementAst: NdsAst?,
+    val ifStatementAst: List<NdsAst>,
+    val elseStatementAst: List<NdsAst>?,
 ) : NdsAst
 
 data class ExpressionAst(

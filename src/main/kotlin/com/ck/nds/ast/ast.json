@@ -3,35 +3,122 @@
   "body": [
     {
       "type": "NamespaceAst",
-      "namespace": "com.ck.mapper.UserInfoMap_per"
+      "namespace": "com.ck.mapper.UserInfoMapper"
     },
     {
-      "type": "WhenStatementAst",
-      "ifStatementAst": [
+      "type": "FragmentAst",
+      "fragmentName": "all_field",
+      "fragmentList": [
         {
-          "type": "IfStatementAst",
-          "expression": {
-            "type": "BooleanAst",
-            "value": true
-          },
-          "consequent": {
-            "type": "StringAst",
-            "value": "aa"
-          }
+          "type": "SqlAst",
+          "sql": "select"
+        },
+        {
+          "type": "SqlAst",
+          "sql": "*"
+        },
+        {
+          "type": "SqlAst",
+          "sql": "from"
+        },
+        {
+          "type": "SqlAst",
+          "sql": "user_info"
+        }
+      ]
+    },
+    {
+      "type": "MappingAst",
+      "mappingName": "selectUserInfoByName",
+      "body": [
+        {
+          "type": "MetadataStatementAst",
+          "metadataInfo": [
+            {
+              "type": "MetadataInfoAst",
+              "metadataKey": "$abc",
+              "metadataVal": "31"
+            }
+          ]
+        },
+        {
+          "type": "FragmentRefAst",
+          "fragmentRefName": "all_field"
         },
         {
           "type": "IfStatementAst",
-          "expression": {
-            "type": "StringAst",
-            "value": "abc"
+          "test": {
+            "type": "AndCallFunctionAst",
+            "paramVariable": "&userName",
+            "funcName": "test",
+            "paramList": []
           },
-          "consequent": {
-            "type": "NumberAst",
-            "value": 21245
-          }
+          "consequent": [
+            {
+              "type": "SqlAst",
+              "sql": "where"
+            },
+            {
+              "type": "SqlAst",
+              "sql": "user_name"
+            },
+            {
+              "type": "SqlAst",
+              "sql": "="
+            },
+            {
+              "type": "ParamVariableAst",
+              "varName": ":userName"
+            }
+          ]
+        },
+        {
+          "type": "WhenStatementAst",
+          "ifStatementAst": [
+            {
+              "type": "IfStatementAst",
+              "test": {
+                "type": "Expression",
+                "operator": "==",
+                "left": {
+                  "type": "AndCallFunctionAst",
+                  "paramVariable": "&userName",
+                  "funcName": "test",
+                  "paramList": []
+                },
+                "right": {
+                  "type": "NumberAst",
+                  "value": 1
+                }
+              },
+              "consequent": [
+                {
+                  "type": "SqlAst",
+                  "sql": "and"
+                },
+                {
+                  "type": "SqlAst",
+                  "sql": "user_mame"
+                },
+                {
+                  "type": "SqlAst",
+                  "sql": "="
+                },
+                {
+                  "type": "SqlAst",
+                  "sql": "abc"
+                }
+              ]
+            }
+          ],
+          "elseStatementAst": [
+            {
+              "type": "StringAst",
+              "value": "aaa"
+            }
+          ]
         }
       ]
     }
   ]
 }
-

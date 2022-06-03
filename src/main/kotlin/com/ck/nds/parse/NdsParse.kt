@@ -8,7 +8,9 @@ import com.ck.nds.token.*
 import com.ck.nds.token.NdsFixedPrefixType.*
 import com.ck.nds.token.NdsKeywordType.*
 import com.ck.nds.token.NdsLiteralType.*
+import com.ck.nds.token.NdsNormalLiteralType.GENERIC
 import com.ck.nds.token.NdsSymbolType.*
+
 
 /**
  * 语法解析
@@ -43,7 +45,7 @@ class NdsParse(string: String) {
         /**
          * 期待类型不匹配
          */
-        if (lookahead !is T) throw SyntaxException("Unexpected end of input expected: ${T::class.simpleName} actual type: $lookahead")
+        if (lookahead !is T) throw SyntaxException("Unexpected end of input expected: ${T::class.simpleName} - ${derivedType ?: ""} actual type: $lookahead")
 
         /**
          * token 子类对应的扩展类型为空直接返回
@@ -84,7 +86,7 @@ class NdsParse(string: String) {
         return false
     }
 
-    private fun expectedMatchNormalLiteral() = NdsNormalLiteralType.GENERIC.expectedMatch()
+    private fun expectedMatchNormalLiteral() = GENERIC.expectedMatch()
     private fun NdsNormalLiteralType.expectedMatch() = expectedMatch<NdsNormalLiteralToken>(this)
     private fun NdsNormalLiteralType.checkTokenType() = checkTokenType<NdsNormalLiteralToken>(this)
 
@@ -109,79 +111,33 @@ class NdsParse(string: String) {
     }
 
     private fun statementList(): List<NdsAst> {
+        val statementList = mutableListOf<NdsAst>()
+
+        // namespace
+        statementList.add(this.namespaceStatement())
+
+        // metadata/fragment 可以为空 
+        this.metadataStatement()?.let { statementList.add(it) }
+        this.fragmentStatement()?.let { statementList.add(it) }
+
+        // 至少有一个 #mapper
+        statementList.add(this.mapperStatement())
+        while (this._lookahead != null) {
+            statementList.add(this.mapperStatement())
+        }
+
+        return statementList
+    }
+
+    private fun namespaceStatement(): NamespaceAst {
         val namespaceToken = NAMESPACE.expectedMatch()
         if (!(namespaceToken.lineNumber == 1 && namespaceToken.lineIndex == 0)) {
             throw SyntaxException("#namespace must be on the first line of the file!")
         }
-        val resultList = mutableListOf<NdsAst>()
-
-
         val normalLiteral = this.expectedMatchNormalLiteral()
-        resultList.add(NamespaceAst(namespace = normalLiteral.string))
-        this.metadataStatement()?.let { resultList.add(it) }
-        this.fragmentStatement()?.let { resultList.add(it) }
 
-        resultList.add(whenStatement())
-//        resultList.add(this.mapperStatement())
-        return resultList
+        return NamespaceAst(namespace = normalLiteral.string)
     }
-
-    /**
-     * :userName?.isNotNull(x, x, ...)
-     */
-    private fun colonCallFunctionStatement(): NdsAst {
-        val variableExpr = COLON_COLON_PREFIX.expectedMatch()
-        QUESTION_DOT.expectedMatch()
-        val funName = this.expectedMatchNormalLiteral()
-        val paramList = this.functionParamStatement()
-
-        return ColonCallFunctionAst(
-            paramVariable = variableExpr.string,
-            funcName = funName.string,
-            paramList = paramList
-        )
-    }
-
-    /**
-     * &userName?.isNotNull(x, x, ...)
-     */
-    private fun andCallFunctionStatement(): NdsAst {
-        val variableExpr = AND_PREFIX.expectedMatch()
-        QUESTION_DOT.expectedMatch()
-
-        val funName = this.expectedMatchNormalLiteral()
-        val paramList = this.functionParamStatement()
-        return AndCallFunctionAst(
-            paramVariable = variableExpr.string,
-            funcName = funName.string,
-            paramList = paramList
-        )
-    }
-
-    /**
-     * 函数参数信息
-     */
-    private fun functionParamStatement(): List<NdsAst> {
-        if (!L_PAREN.checkTokenType()) return emptyList()
-
-        val paramList = mutableListOf<NdsAst>()
-        L_PAREN.expectedMatch()
-
-        while (true) {
-            if (!checkTokenType<NdsLiteralToken>()) {
-                break
-            }
-            val literalToken = this.literal()
-            paramList.add(literalToken)
-            if (COMMA.checkTokenType()) COMMA.expectedMatch() else break
-        }
-
-
-        R_PAREN.expectedMatch()
-
-        return paramList
-    }
-
 
     private fun metadataStatement(): NdsAst? {
         val lookahead = this._lookahead ?: throw SyntaxException("文件信息不完整")
@@ -192,29 +148,50 @@ class NdsParse(string: String) {
         METADATA.expectedMatch()
         L_BRACE.expectedMatch()
 
+        val metadataAstList = mutableListOf<MetadataAst>()
+
         // 获取metadata信息
-        val metadataInfoMap = mutableMapOf<String, String>()
-        while (true) {
-            val metadataInfo = this.metadataInfo() ?: break
-            metadataInfoMap[metadataInfo.first] = metadataInfo.second
+        while (DOLLAR_PREFIX.checkTokenType()) {
+            metadataAstList.add(this.metadataInfo())
         }
+
         R_BRACE.expectedMatch()
-        return MetadataInfoAst(metadataMap = metadataInfoMap)
+        return MetadataStatementAst(metadataInfo = metadataAstList)
     }
 
-    private fun metadataInfo(): Pair<String, String>? {
-        val lookahead = this._lookahead ?: return null
-        if (lookahead !is NdsFixedPrefixToken) return null
-        if (lookahead.tokenType != DOLLAR_PREFIX) return null
-
+    private fun metadataInfo(): MetadataAst {
         val key = DOLLAR_PREFIX.expectedMatch()
         COLON.expectedMatch()
         val value = STRING_LITERAL.expectedMatch()
-        return key.string to value.string
+        return MetadataAst(
+            metadataKey = key.string,
+            metadataVal = value.string
+        )
     }
 
     private fun fragmentStatement(): NdsAst? {
-        return null
+        if (!FRAGMENT.checkTokenType()) {
+            return null
+        }
+
+        FRAGMENT.expectedMatch()
+        val fragmentName = this.expectedMatchNormalLiteral()
+        L_BRACE.expectedMatch()
+        val mapperStatementBlock = this.mapperStatementBlock()
+
+        R_BRACE.expectedMatch()
+
+        return FragmentAst(
+            fragmentName = fragmentName.string,
+            fragmentList = mapperStatementBlock
+        )
+    }
+
+    private fun fragmentRefStatement(): FragmentRefAst {
+        FRAGMENT_REF.expectedMatch()
+        val fragmentRefName = this.expectedMatchNormalLiteral()
+
+        return FragmentRefAst(fragmentRefName = fragmentRefName.string)
     }
 
     private fun mapperStatement(): MappingAst {
@@ -222,48 +199,46 @@ class NdsParse(string: String) {
         val mappingName = this.expectedMatchNormalLiteral()
         L_BRACE.expectedMatch()
 
-        val blockAstList = this.mapperStatementBlock()
+        val blockAstList = this.mapperStatementBlock(true)
         R_BRACE.expectedMatch()
         return MappingAst(mappingName = mappingName.string, body = blockAstList)
     }
 
-    private fun mapperStatementBlock(isLoadMetadata: Boolean = true): List<NdsAst> {
-        val blockAstList = mutableListOf<NdsAst>()
+    /**
+     * sql
+     * #metadata
+     * #fragment_ref
+     * #if
+     * #when
+     */
+    private fun mapperStatementBlock(isReadMetadata: Boolean = false): List<NdsAst> {
+        val blockList = mutableListOf<NdsAst>()
 
-        if (isLoadMetadata) this.metadataStatement()?.let { blockAstList.add(it) }
-
-        while (true) {
-            val lookahead = this._lookahead ?: break
-
-            when (lookahead) {
-                is NdsNormalLiteralToken -> {
-                    val normalLiteral = expectedMatchNormalLiteral()
-                    blockAstList.add(SqlAst(sql = normalLiteral.string))
-                }
-                is NdsKeywordToken -> {
-                    when (lookahead.tokenType) {
-                        FRAGMENT -> TODO()
-                        IF -> TODO()
-                        WHEN -> TODO()
-                        else -> break
-                    }
-                }
-                is NdsFixedPrefixToken -> {
-                    val paramVariable = COLON_COLON_PREFIX.expectedMatch()
-                    blockAstList.add(ParamVariableAst(varName = paramVariable.string))
-                }
-                else -> {
-                    break
-                }
-            }
-
+        if (isReadMetadata) {
+            this.metadataStatement()?.let { blockList.add(it) }
         }
 
-        return blockAstList
+        while (!R_BRACE.checkTokenType()) {
+            val blockAst = when {
+                GENERIC.checkTokenType() -> this.sqlStatement()
+                COLON_PREFIX.checkTokenType() -> this.paramVariableStatement()
+                IF.checkTokenType() -> this.ifStatement()
+                WHEN.checkTokenType() -> this.whenStatement()
+                checkTokenType<NdsLiteralToken>() -> this.literal()
+                FRAGMENT_REF.checkTokenType() -> this.fragmentRefStatement()
+                COLON_COLON_PREFIX.checkTokenType() -> this.colonColonCallFunctionStatement()
+                else -> throw SyntaxException("mapper 中语法错误, 无法处理: ${this._lookahead}")
+            }
+
+            blockList.add(blockAst)
+        }
+
+        return blockList
     }
 
-    private fun mappingBlock(): NdsAst {
-        return this.literal()
+    private fun sqlStatement(): SqlAst {
+        val token = GENERIC.expectedMatch()
+        return SqlAst(sql = token.string)
     }
 
     private fun ifStatement(): NdsAst {
@@ -271,7 +246,7 @@ class NdsParse(string: String) {
         val test = this.expression()
 
         L_BRACE.expectedMatch()
-        val block = this.mappingBlock()
+        val block = this.mapperStatementBlock(false)
         R_BRACE.expectedMatch()
 
         return IfStatementAst(
@@ -300,7 +275,7 @@ class NdsParse(string: String) {
 
     }
 
-    private fun elseBlockStatement(): NdsAst? {
+    private fun elseBlockStatement(): List<NdsAst>? {
         if (!ELSE.checkTokenType()) {
             return null
         }
@@ -308,7 +283,7 @@ class NdsParse(string: String) {
         ELSE.expectedMatch()
         ARROW.expectedMatch()
         L_BRACE.expectedMatch()
-        val block = this.literal()
+        val block = this.mapperStatementBlock(false)
         R_BRACE.expectedMatch()
         return block
     }
@@ -317,12 +292,12 @@ class NdsParse(string: String) {
         val expression = expression()
         ARROW.expectedMatch()
         L_BRACE.expectedMatch()
-        val block = this.literal()
+        val blockList = this.mapperStatementBlock(false)
         R_BRACE.expectedMatch()
 
         return IfStatementAst(
             test = expression,
-            consequent = block
+            consequent = blockList
         )
 
     }
@@ -394,6 +369,65 @@ class NdsParse(string: String) {
         val fixedPrefixToken = COLON_PREFIX.expectedMatch()
         return ParamVariableAst(varName = fixedPrefixToken.string)
     }
+
+
+    /**
+     * ::userName?.isNotNull(x, x, ...)
+     */
+    private fun colonColonCallFunctionStatement(): NdsAst {
+        val variableExpr = COLON_COLON_PREFIX.expectedMatch()
+
+        QUESTION_DOT.expectedMatch()
+        val funName = this.expectedMatchNormalLiteral()
+        val paramList = this.functionParamStatement()
+
+        return ColonCallFunctionAst(
+            paramVariable = variableExpr.string,
+            funcName = funName.string,
+            paramList = paramList
+        )
+    }
+
+    /**
+     * &userName?.isNotNull(x, x, ...)
+     */
+    private fun andCallFunctionStatement(): NdsAst {
+        val variableExpr = AND_PREFIX.expectedMatch()
+        QUESTION_DOT.expectedMatch()
+
+        val funName = this.expectedMatchNormalLiteral()
+        val paramList = this.functionParamStatement()
+        return AndCallFunctionAst(
+            paramVariable = variableExpr.string,
+            funcName = funName.string,
+            paramList = paramList
+        )
+    }
+
+    /**
+     * 函数参数信息
+     */
+    private fun functionParamStatement(): List<NdsAst> {
+        if (!L_PAREN.checkTokenType()) return emptyList()
+
+        val paramList = mutableListOf<NdsAst>()
+        L_PAREN.expectedMatch()
+
+        while (true) {
+            if (!checkTokenType<NdsLiteralToken>()) {
+                break
+            }
+            val literalToken = this.literal()
+            paramList.add(literalToken)
+            if (COMMA.checkTokenType()) COMMA.expectedMatch() else break
+        }
+
+
+        R_PAREN.expectedMatch()
+
+        return paramList
+    }
+
 
 }
 
